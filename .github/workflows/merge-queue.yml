@@ -24,6 +24,16 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - name: Set committer and author information
+        run: |
+          export GIT_AUTHOR_NAME=$(git show -s --format='%an')
+          export GIT_AUTHOR_EMAIL=$(git show -s --format='%ae')
+          export GIT_COMMITTER_NAME=$(git show -s --format='%cn')
+          export GIT_COMMITTER_EMAIL=$(git show -s --format='%ce')
+          echo "::set-env name=GIT_AUTHOR_NAME::$GIT_AUTHOR_NAME"
+          echo "::set-env name=GIT_AUTHOR_EMAIL::$GIT_AUTHOR_EMAIL"
+          echo "::set-env name=GIT_COMMITTER_NAME::$GIT_COMMITTER_NAME"
+          echo "::set-env name=GIT_COMMITTER_EMAIL::$GIT_COMMITTER_EMAIL"
       - name: Fetch ${{ github.event.pull_request.base.ref }}
         run: 'git fetch origin ${{ github.event.pull_request.base.ref }}:target'
       - name: Reset --soft to common commit
