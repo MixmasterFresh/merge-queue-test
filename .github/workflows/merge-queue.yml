@@ -44,11 +44,35 @@ jobs:
         run: 'git rebase target'
 
       # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
       - name: Run our flaky "test"
         run: if (( RANDOM % 2 )); then exit 0; else exit 1; fi
         
       - name: Merge it!
         run: 'git push origin HEAD:${{ github.event.pull_request.base.ref }}'
+      - name: Close the PR
+        uses: superbrothers/close-pull-request@v3
+      - name: Label as merged
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: merged
+      - name: Label as merged
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: merged
+      - uses: actions-ecosystem/action-remove-labels@v1
+        with:
+          labels: queued
+  failure:
+    needs: build
+    if: ${{ always() && needs.build.result == 'failure' }}
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Label as merged
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: merged
+      - uses: actions-ecosystem/action-remove-labels@v1
+        with:
+          labels: queued
+    
       
