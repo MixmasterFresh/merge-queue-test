@@ -69,7 +69,7 @@ jobs:
       - name: Label as merged
         uses: actions-ecosystem/action-add-labels@v1
         with:
-          labels: merged
+          labels: failed
       - uses: actions-ecosystem/action-remove-labels@v1
         with:
           labels: queued
