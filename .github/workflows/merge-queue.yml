@@ -37,7 +37,7 @@ jobs:
       - name: Fetch ${{ github.event.pull_request.base.ref }}
         run: 'git fetch origin ${{ github.event.pull_request.base.ref }}:target'
       - name: Reset --soft to common commit
-        run: 'git reset $(git merge-base target $(git branch --show-current))'
+        run: 'git reset $(git merge-base target HEAD)'
       - name: Create single commit
         run: 'git add -A && git commit -m "${{github.event.pull_request.title}}"'
       - name: Rebase onto ${{ github.event.pull_request.base.ref }}
