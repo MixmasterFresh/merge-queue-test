@@ -55,10 +55,6 @@ jobs:
         uses: actions-ecosystem/action-add-labels@v1
         with:
           labels: merged
-      - name: Label as merged
-        uses: actions-ecosystem/action-add-labels@v1
-        with:
-          labels: merged
       - uses: actions-ecosystem/action-remove-labels@v1
         with:
           labels: queued
