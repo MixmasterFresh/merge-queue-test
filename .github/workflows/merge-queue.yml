@@ -11,12 +11,34 @@ jobs:
       # Should probably do some validation that the PR can be merged(e.g. is approved)
     
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: MixmasterFresh/merge-queue-start@ad565f6aab839f588049231ac360ef0cc155382b
+      - name: Cancelling as not applicable
+        uses: andymckay/cancel-action@0.2
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'queued') }}
+      - name: Cancelling due to previous failure
+        uses: andymckay/cancel-action@0.2
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'failed') }}
+      - name: Cancelling since we already merged
+        uses: andymckay/cancel-action@0.2
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'merged') }}
+      - name: Checkout
+        uses: actions/checkout@v2
         with:
-          queue-label: queued
-          failed-label: failed
-          merged-label: merged
+          fetch-depth: 0
+      - name: Fetch ${{ github.event.pull_request.base.ref }}
+        run: 'git fetch origin ${{ github.event.pull_request.base.ref }}:target'
+      - name: Reset --soft to common commit
+        run: 'git reset $(git merge-base target $(git branch --show-current))'
+      - name: Create single commit
+        run: 'git add -A && git commit -m "${{commit-message}}"'
+      - name: Rebase onto ${{ github.event.pull_request.base.ref }}
+        run: 'git rebase target'
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
         run: echo Hello, world!
+      - name: Run our flaky "test"
+        run: if (( RANDOM % 2 )); then exit 0; else exit 1; fi
+        
+      - name: Merge it!
+        run: 'git push origin ${{ github.event.pull_request.base.ref }}'
+      
