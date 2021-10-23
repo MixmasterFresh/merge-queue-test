@@ -50,7 +50,10 @@ jobs:
       - name: Merge it!
         run: 'git push origin HEAD:${{ github.event.pull_request.base.ref }}'
       - name: Close the PR
-        uses: superbrothers/close-pull-request@v3
+        uses: peter-evans/close-pull@v1
+        with:
+          comment: Merged to ${{ github.event.pull_request.base.ref }} successfully
+          delete-branch: true
       - name: Label as merged
         uses: actions-ecosystem/action-add-labels@v1
         with:
