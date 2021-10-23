@@ -1,4 +1,4 @@
-# Github Actions Merge Queue
+# GitHub Actions Merge Queue
 
 Listening to [Episode 313 of The Bike Shed](https://www.bikeshed.fm/313) there was a discussion of wanting a merge queue to prevent issues with multiple commits getting merged at the same time and creating a state that had not been tested in either PR. Towards the end of that discussion, there was a quote that went "If anyone at GitHub is listening, I would love if you all threw this into your platform, and then you could ping Slack if anything went wrong."
 
