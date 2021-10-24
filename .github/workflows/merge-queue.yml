@@ -10,7 +10,7 @@ jobs:
     steps:
       # Should probably do some validation that the PR can be merged(e.g. is approved)
     
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # Check if this has the right labels, and cancel otherwise
       - name: Cancelling as not applicable
         uses: andymckay/cancel-action@0.2
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'queued') }}
@@ -20,10 +20,14 @@ jobs:
       - name: Cancelling since we already merged
         uses: andymckay/cancel-action@0.2
         if: ${{ contains(github.event.pull_request.labels.*.name, 'merged') }}
+        
+      # Check out the repository. We're using a full fetch depth because we will need it when we run git merge-base
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          
+      # Set the committer and author to the last commit's committer and author
       - name: Set committer and author information
         run: |
           export GIT_AUTHOR_NAME=$(git show -s --format='%an')
@@ -34,43 +38,60 @@ jobs:
           echo "GIT_AUTHOR_EMAIL=$GIT_AUTHOR_EMAIL" >> $GITHUB_ENV
           echo "GIT_COMMITTER_NAME=$GIT_COMMITTER_NAME" >> $GITHUB_ENV
           echo "GIT_COMMITTER_EMAIL=$GIT_COMMITTER_EMAIL" >> $GITHUB_ENV
+          
+      # Pull our target branch down
       - name: Fetch ${{ github.event.pull_request.base.ref }}
         run: 'git fetch origin ${{ github.event.pull_request.base.ref }}:target'
+        
+      # Reset HEAD to the last common commit, but maintain the working tree
       - name: Reset --soft to common commit
         run: 'git reset $(git merge-base target HEAD)'
+        
+      # Create the new commit
       - name: Create single commit
         run: 'git add -A && git commit -m "${{github.event.pull_request.title}}"'
+      
+      # Rebase onto our target branch
       - name: Rebase onto ${{ github.event.pull_request.base.ref }}
         run: 'git rebase target'
 
-      # Runs a single command using the runners shell
+      # Runs a flaky test so that we can get a feel for what failure looks like
       - name: Run our flaky "test"
         run: if (( RANDOM % 2 )); then exit 0; else exit 1; fi
         
+      # If the tests didn't fail, merge it
       - name: Merge it!
         run: 'git push origin HEAD:${{ github.event.pull_request.base.ref }}'
+        
       - name: Close the PR
         uses: peter-evans/close-pull@v1
         with:
           comment: Merged to ${{ github.event.pull_request.base.ref }} successfully
           delete-branch: true
+          
       - name: Label as merged
         uses: actions-ecosystem/action-add-labels@v1
         with:
           labels: merged
-      - uses: actions-ecosystem/action-remove-labels@v1
+          
+      - name: Remove "queued" label
+        uses: actions-ecosystem/action-remove-labels@v1
         with:
           labels: queued
+          
+  # If any of the steps in the previous job fails, remove the queued label and add the failed label
   failure:
     needs: build
     if: ${{ always() && needs.build.result == 'failure' }}
     runs-on: ubuntu-latest
     steps: 
-      - name: Label as merged
+      - name: Label as failed
         uses: actions-ecosystem/action-add-labels@v1
         with:
           labels: failed
-      - uses: actions-ecosystem/action-remove-labels@v1
+          
+      - name: Remove "queued" label
+        uses: actions-ecosystem/action-remove-labels@v1
         with:
           labels: queued
     
