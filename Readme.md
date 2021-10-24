@@ -3,7 +3,7 @@
 Listening to [Episode 313 of The Bike Shed](https://www.bikeshed.fm/313) there was a discussion of wanting a merge queue to prevent issues with multiple commits getting merged at the same time and creating a state that had not been tested in either PR. Towards the end of that discussion, there was a quote that went "If anyone at GitHub is listening, I would love if you all threw this into your platform, and then you could ping Slack if anything went wrong."
 
 
-Well, while I do work at GitHub, I don't work on dotcom(the main site) but rather in actions way way way in the backend. Looking at this problem, I decided that when all I have is an actions hammer, everything is an actions nail. With that said, it's surprisingly easy to get something passable using public actions. This repo is meant as a proof of concept of what an actions based merge queue looks like. 
+Well, while I do work at GitHub, I don't work on dotcom(the main site) but rather in actions way way way in the backend. Looking at this problem, I decided that when all I have is an actions hammer, everything looks like an actions nail. With that said, it's surprisingly easy to get something passable using public actions. This repo is meant as a proof of concept of what an actions based merge queue looks like. 
 
 
 # The deets
@@ -25,4 +25,5 @@ We also do a squash and rebase that does not look pretty, but it works. We maint
 There are some obvious ways to improve this including:
 - make it push the in-progress branch such that we can have a separate job or matrix of jobs run for the test step
 - add some verification that the branch should be merged(i.e is appropriately approved and the label adder has the correct permissions)
-- send messages to slack
+- send messages to slack(there are some public actions for this)
+- If you aren't using github actions for your tests(whaaaat?) then you can still push to a new branch(for example `merge-queue/original-branch-name`), have your tests configured to run on that branch, and then fire off a new action on the [check_run](https://docs.github.com/en/actions/learn-github-actions/events-that-trigger-workflows#check_run) trigger to verify the tests passed and merge/close out the pr.
